@@ -1,4 +1,4 @@
-<html>
+<html><html>
 <head>
 <title>My Travels</title>
 <script
@@ -15,11 +15,13 @@
     <div class="w3-light-grey w3-round-large">
         <div class="w3-container w3-blue w3-round-large" id="progressBar" style="width:0%"><span id="progressText" style="color: black">Progress</span></div>
     </div>
+    
     <form>
-        QUICK! In 3 minutes, guess as many countries as you can that Kody has visited: <span id="countdown"></span><br><input type="text" id="countryField" value="" placeholder="i.e. United States"><br>
+        QUICK! In 3 minutes, guess as many countries as you can that Kody has visited: <br><input type="text" id="countryField" value="" placeholder="i.e. United States" autofocus><br>
         <input id="submitButton" type="submit" value="Submit"><br>
-        Correct Guesses: <span id="correctGuesses"></span>
     </form>
+    <div>Countdown: <span id="countdown"></span></div>
+    Correct Guesses: <span id="correctGuesses"></span>
     <input type="button" id="resetButton" value="Reset All"></input><br><br>
 <textarea id="displaycountry"></textarea>
 <p>Current Weather</p>
@@ -29,27 +31,32 @@
             var countries = [];
             var highScoreWidthVal = 0;
             var widthVal = 0;
-            var countdown = 180;
-            var startTimer = true;
+            var countdownVal = 180;
+            var shouldStartTimer = true;
+            var mytimer;
             $("#submitButton").click(function(e) {
-                if(startTimer){
+                if(shouldStartTimer){
                     setTimeout(function(){
                         countries = [];
                         widthVal = 0;
-                        countdown = 180;
                         $("#correctGuesses").empty();
                         $("#progressBar").css({"width":"0%"});
-                        startTimer = true;
+                        shouldStartTimer = true;
                     }, 180000); //180000
-                    setInterval(function(){
-                        countdown -= 1;
-                        $("#countdown").val(countdown);
-                    })
+                    mytimer = setInterval(function(){
+                        if(countdownVal != 0){
+                            countdownVal = countdownVal - 1;
+                        }
+                        else{
+                            alert('Time is up!');
+                            clearInterval(mytimer);
+                        }
+                        $("#countdown").text((countdownVal));
+                    }, 1000);
                 }
-                startTimer = false;
+                shouldStartTimer = false;
                     e.preventDefault();
                     $.getJSON("http://34.217.92.8:3004/getcountry?q="+$("#countryField").val(),function(data) {
-                      var startSize = countries.length;
                       if (data[0] != null){
                           var isDuplicate = false;
                           $.each(countries, function(i,item) {
@@ -62,29 +69,18 @@
                           }
                           widthVal = countries.length/17*100;
                           widthVal = widthVal.toPrecision(2);
-                          console.log("curScore");
-                          console.log(widthVal);
-                          console.log("highScore");
-                          console.log(highScoreWidthVal);
                           if(parseFloat(widthVal) > parseFloat(highScoreWidthVal)){
-                              console.log("cur higher than high");
                             highScoreWidthVal = widthVal;
                             var highScoreWidth = widthVal + "%";
                             $("#highScore").css({"width":highScoreWidth});
                           }
-                          else{
-                              console.log("not as high");
-                          }
                           var width = widthVal + "%";
                           if (parseFloat(widthVal) >  95){
-                              console.log("here");
                               $("#highScoreText").text("You guessed them all!");
                               $("#progressText").text("Congratulations!");
                           }
                           $("#progressBar").css({"width":width});
                       }
-                      var endSize = countries.length;
-                      console.log(countries);
                         var everything;
                         everything = "<ul>";
                         $.each(countries, function(i,item) {
@@ -97,7 +93,6 @@
                     .done(function() {console.log('getJSON request succeeded.');})
                     .fail(function(jqXHR, textStatus, errorThrown) {
                         console.log('getJSON request failed! ' + textStatus);
-                        console.log("incoming "+jqXHR.responseText);
                     })
                     .always(function() { console.log('getJSON request ended.');
                     });
@@ -139,11 +134,13 @@
                 countries = [];
                 widthVal = 0;
                 highScoreWidthVal = 0;
-                countdown = 180;
+                countdownVal = 180;
                 $("#correctGuesses").empty();
                 $("#progressBar").css({"width":"0%"});
                 $("#highScore").css({"width":"0%"});
-                startTimer = true;
+                $("#countdown").empty()
+                shouldStartTimer = true;
+                clearInterval(mytimer);
             });
         </script>
 
