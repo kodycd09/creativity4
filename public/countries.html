@@ -1,0 +1,151 @@
+<html>
+<head>
+<title>My Travels</title>
+<script
+  src="http://code.jquery.com/jquery-3.2.1.min.js">
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="stylesheets/style.css">
+</head>
+<body>
+    <div class="w3-light-grey w3-round-large">
+        <div class="w3-container w3-green w3-round-large" id="highScore" style="width:0%"><span id="highScoreText" style="color: black">High Score</span></div>
+    </div>
+    <div class="w3-light-grey w3-round-large">
+        <div class="w3-container w3-blue w3-round-large" id="progressBar" style="width:0%"><span id="progressText" style="color: black">Progress</span></div>
+    </div>
+    <form>
+        QUICK! In 3 minutes, guess as many countries as you can that Kody has visited: <span id="countdown"></span><br><input type="text" id="countryField" value="" placeholder="i.e. United States"><br>
+        <input id="submitButton" type="submit" value="Submit"><br>
+        Correct Guesses: <span id="correctGuesses"></span>
+    </form>
+    <input type="button" id="resetButton" value="Reset All"></input><br><br>
+<textarea id="displaycountry"></textarea>
+<p>Current Weather</p>
+<div id="weather"></div>
+        <script>
+        /* global $ */
+            var countries = [];
+            var highScoreWidthVal = 0;
+            var widthVal = 0;
+            var countdown = 180;
+            var startTimer = true;
+            $("#submitButton").click(function(e) {
+                if(startTimer){
+                    setTimeout(function(){
+                        countries = [];
+                        widthVal = 0;
+                        countdown = 180;
+                        $("#correctGuesses").empty();
+                        $("#progressBar").css({"width":"0%"});
+                        startTimer = true;
+                    }, 180000); //180000
+                    setInterval(function(){
+                        countdown -= 1;
+                        $("#countdown").val(countdown);
+                    })
+                }
+                startTimer = false;
+                    e.preventDefault();
+                    $.getJSON("http://34.217.92.8:3004/getcountry?q="+$("#countryField").val(),function(data) {
+                      var startSize = countries.length;
+                      if (data[0] != null){
+                          var isDuplicate = false;
+                          $.each(countries, function(i,item) {
+                              if(countries[i] == data[0]){
+                                  isDuplicate = true;
+                              }
+                          });
+                          if(!isDuplicate) {
+                            countries.push(data[0]);
+                          }
+                          widthVal = countries.length/17*100;
+                          widthVal = widthVal.toPrecision(2);
+                          console.log("curScore");
+                          console.log(widthVal);
+                          console.log("highScore");
+                          console.log(highScoreWidthVal);
+                          if(parseFloat(widthVal) > parseFloat(highScoreWidthVal)){
+                              console.log("cur higher than high");
+                            highScoreWidthVal = widthVal;
+                            var highScoreWidth = widthVal + "%";
+                            $("#highScore").css({"width":highScoreWidth});
+                          }
+                          else{
+                              console.log("not as high");
+                          }
+                          var width = widthVal + "%";
+                          if (parseFloat(widthVal) >  95){
+                              console.log("here");
+                              $("#highScoreText").text("You guessed them all!");
+                              $("#progressText").text("Congratulations!");
+                          }
+                          $("#progressBar").css({"width":width});
+                      }
+                      var endSize = countries.length;
+                      console.log(countries);
+                        var everything;
+                        everything = "<ul>";
+                        $.each(countries, function(i,item) {
+                            everything += "<li> " + countries[i];
+                        });
+                        everything += "</ul>";
+                        $("#correctGuesses").html(everything);
+                        $("#countryField").val("");
+                    })
+                    .done(function() {console.log('getJSON request succeeded.');})
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                        console.log('getJSON request failed! ' + textStatus);
+                        console.log("incoming "+jqXHR.responseText);
+                    })
+                    .always(function() { console.log('getJSON request ended.');
+                    });
+            });
+            $("#submitButton").click(function(e){
+                var value = $("#countryField").val();
+                console.log(value);
+                e.preventDefault();
+                $("#displaycountry").text(value);
+                //API KEY: d6b8df8c5ce8a18befc6090991e25417
+                var myurl = "https://api.openweathermap.org/data/2.5/weather?units=imperial&appid=d6b8df8c5ce8a18befc6090991e25417&q=";
+                myurl += value;
+                $.ajax({
+                    url : myurl,
+                    dataType : "json",
+                        success : function(parsed_json) {
+                            console.log(parsed_json);
+                            var location = parsed_json['name'];
+                            var weather = parsed_json['weather'][0]['main'];
+                            var temp = parsed_json['main']['temp'];
+                            var weather_icon = parsed_json['weather'][0]['icon'];
+                            var humidity = parsed_json['main']['humidity'];
+                            var temp_min = parsed_json['main']['temp_min'];
+                            var temp_max = parsed_json['main']['temp_max'];
+                            var wind_speed = parsed_json['wind']['speed'];
+                            var everything = "<img src=\"http://openweathermap.org/img/w/" + weather_icon + ".png\"/>"
+                            everything += "<ul>";
+                            everything += "<li>Location: " + location;
+                            everything += "<li>Weather: " + weather + " (" + temp + "&#8457;)";
+                            everything += "<li>Low: " + temp_min + "&#8457; | High: " + temp_max + "&#8457;";
+                            everything += "<li>Humidity: " + humidity + "%";
+                            everything += "<li>Wind: " + wind_speed + " mph";
+                            everything += "</ul>";
+                            $("#weather").html(everything);
+                        }
+                });
+            });
+            $("#resetButton").click(function(){
+                countries = [];
+                widthVal = 0;
+                highScoreWidthVal = 0;
+                countdown = 180;
+                $("#correctGuesses").empty();
+                $("#progressBar").css({"width":"0%"});
+                $("#highScore").css({"width":"0%"});
+                startTimer = true;
+            });
+        </script>
+
+</body>
+</html>
